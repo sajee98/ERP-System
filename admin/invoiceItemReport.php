@@ -5,26 +5,38 @@ include 'includes/header.php';
     <div class="col-md-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">#INvoice Item Report</h4>
+                <h4 class="card-title mb-0">Invoice Item Report</h4>
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">From</span>
+                        <input id="fromDate" type="date" class="form-control form-control-sm">
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">To</span>
+                        <input id="toDate" type="date" class="form-control form-control-sm">
+                    </div>
+                    <input id="searchBox" class="form-control form-control-sm" style="min-width:220px" placeholder="Search invoice, customer, item...">
+                    <button id="clearFilters" class="btn btn-sm btn-secondary">Clear</button>
+                </div>
             </div>
             <div class="card-body">
-                <table class="table table-bordered table-striped table-sm">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Invoice No</th>
-                            <th>Invoice Date </th>
-                            <th>Customer</th>
-                            <th>item name + Code</th>
-                            <th>Item Category</th>
-                            <th>Item Sub Category</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+                <div id="responses" class="mb-2"></div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Invoice No</th>
+                                <th>Invoice Date</th>
+                                <th>Customer</th>
+                                <th>Item name + Code</th>
+                                <th>ItemCat</th>
+                                <th>SubCat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
             </div>
-
         </div>
     </div>
 </div>
@@ -32,45 +44,49 @@ include 'includes/header.php';
 <?php include 'includes/footer.php'; ?>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tableBody = document.querySelector('table tbody');
+document.addEventListener('DOMContentLoaded', function() {
+    const tableBody = document.getElementById('tableBody');
+    const responses = document.getElementById('responses');
+    const fromDate = document.getElementById('fromDate');
+    const toDate = document.getElementById('toDate');
+    const searchBox = document.getElementById('searchBox');
+    const clearBtn = document.getElementById('clearFilters');
 
-        function loadCustomers() {
-            fetch('invoiceItemReport-fetch.php')
-                .then(res => res.text())
-                .then(html => {
-                    tableBody.innerHTML = html;
-                    document.querySelectorAll('.btn-delete').forEach(btn => {
-                        btn.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            const customerId = this.dataset.id;
-                            if (confirm('Are you sure you want to delete this customer?')) {
-                                deleteCustomer(customerId);
-                            }
-                        });
-                    });
-                })
-                .catch(err => console.error('Error fetching customers:', err));
-        }
+    function debounce(fn, delay = 300) {
+        let t;
+        return (...args) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn(...args), delay);
+        };
+    }
 
-        function deleteCustomer(id) {
-            fetch('customer-delete.php?id=' + encodeURIComponent(id), {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    responses.innerHTML = `<div class="alert alert-${data.status === 'success' ? 'success' : 'danger'}">${data.message}</div>`;
-                    loadCustomers();
-                    setTimeout(() => {
-                        responses.innerHTML = '';
-                    }, 2500);
-                })
-                .catch(err => console.error('Error deleting customer:', err));
-        }
+    function showMessage(html, timeout = 3000) {
+        responses.innerHTML = html;
+        if (timeout > 0) setTimeout(() => responses.innerHTML = '', timeout);
+    }
 
-        loadCustomers();
+    function loadInvoiceItems() {
+        const params = new URLSearchParams();
+        if (fromDate.value) params.append('from', fromDate.value);
+        if (toDate.value) params.append('to', toDate.value);
+        if (searchBox.value.trim() !== '') params.append('search', searchBox.value.trim());
+
+        fetch('invoiceItemReport-fetch.php?' + params.toString())
+            .then(res => res.text())
+            .then(html => tableBody.innerHTML = html)
+            .catch(err => showMessage('<div class="alert alert-danger">Error loading invoice items</div>'));
+    }
+
+    fromDate.addEventListener('change', loadInvoiceItems);
+    toDate.addEventListener('change', loadInvoiceItems);
+    searchBox.addEventListener('input', debounce(loadInvoiceItems));
+    clearBtn.addEventListener('click', function() {
+        fromDate.value = '';
+        toDate.value = '';
+        searchBox.value = '';
+        loadInvoiceItems();
     });
+
+    loadInvoiceItems();
+});
 </script>

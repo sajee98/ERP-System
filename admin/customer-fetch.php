@@ -35,7 +35,7 @@ while ($row = mysqli_fetch_assoc($result)) {
         <td>{$district}</td>
         <td>
             <a href=\"customer-edit.php?id={$id}\" class=\"btn btn-sm btn-primary\">Edit</a>
-            <a href=\"customer-delete.php?id={$id}\" class=\"btn btn-sm mx-2 btn-danger\">Delete</a>
+            <a href=\"customer-delete.php?id={$id}\" class=\"btn btn-sm mx-2 btn-danger \">Delete</a>
         </td>
     </tr>";
     $counter++;
