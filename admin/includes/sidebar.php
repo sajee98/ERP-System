@@ -2,7 +2,7 @@
     <div class="sidenav-header">
       <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
       <a class="navbar-brand m-0" href="index.php" >
-        <img src="assets/img/logo-ct-dark.png" class="navbar-brand-img h-100" alt="main_logo">
+        <img src="https://static.vecteezy.com/system/resources/previews/019/879/186/non_2x/user-icon-on-transparent-background-free-png.png" class="navbar-brand-img h-100" alt="main_logo">
         <span class="ms-1 font-weight-bold">ERP System</span>
       </a>
     </div>
@@ -77,21 +77,17 @@
 
   <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const currentPath = window.location.pathname.split('/').pop(); // Get the current filename (e.g., "customers.php")
+    const currentPath = window.location.pathname.split('/').pop(); 
     const navLinks = document.querySelectorAll('.nav-link');
 
     navLinks.forEach(link => {
-        // Remove old active classes
         link.classList.remove('active');
 
-        // Get link's href target (filename only)
         const linkPath = link.getAttribute('href').split('/').pop();
 
-        // Compare to current page
         if (linkPath === currentPath) {
             link.classList.add('active');
 
-            // Optional: highlight icon background if your template uses it
             const iconDiv = link.querySelector('.icon');
             if (iconDiv) {
                 iconDiv.classList.add('bg-gradient-primary');

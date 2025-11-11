@@ -1,5 +1,4 @@
 <?php
-// itemReport-fetch.php
 require '../config/function.php'; 
 
 header('Content-Type: text/html; charset=utf-8');

@@ -1,5 +1,4 @@
 <?php
-// item-form.php
 include 'includes/header.php';
 ?>
 <div class="container mt-4">
@@ -148,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return errors;
   }
 
-  //the code fpr hide the error msg afe=ter typed
     itemForm.addEventListener('input', function(e) {
             const name = e.target.name;
             if (!name) return;
@@ -177,7 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const formData = new FormData(itemForm);
       const resp = await fetch('itemInsert.php', { method: 'POST', body: formData, credentials: 'same-origin' });
 
-      // parse robustly
       const text = await resp.text();
       let data;
       try {

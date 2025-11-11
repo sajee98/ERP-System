@@ -35,7 +35,6 @@ if ($search) {
     $types .= 'ssss';
 }
 
-// Adjust table/column names if needed
 $sql = "SELECT invoice_number, invoice_date, customer_name, item_name, item_code, item_category, item_sub_category 
         FROM invoices";
 if (count($where) > 0) $sql .= " WHERE " . implode(' AND ', $where);

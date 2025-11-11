@@ -100,21 +100,33 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    function deleteItem(id) {
-        fetch('itemDelete.php?id=' + encodeURIComponent(id), {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-        })
-        .then(res => res.json())
-        .then(data => {
-            showMessage(`<div class="alert alert-${data.status === 'success' ? 'success' : 'danger'}">${data.message}</div>`, 2500);
-            loadItems();
-        })
-        .catch(err => {
-            console.error('Error deleting item:', err);
-            showMessage('<div class="alert alert-danger">Delete request failed</div>');
-        });
-    }
+function deleteItem(id) {
+    fetch('itemDelete.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ id: String(id) })
+    })
+    .then(async res => {
+        // optional: check HTTP status
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error('Server returned ' + res.status + ': ' + text);
+        }
+        return res.json();
+    })
+    .then(data => {
+        showMessage(`<div class="alert alert-${data.status === 'success' ? 'success' : 'danger'}">${data.message}</div>`, 2500);
+        loadItems();
+    })
+    .catch(err => {
+        console.error('Error deleting item:', err);
+        showMessage('<div class="alert alert-danger">Delete request failed — see console for details</div>');
+    });
+}
+
 
     fromDate.addEventListener('change', loadItems);
     toDate.addEventListener('change', loadItems);

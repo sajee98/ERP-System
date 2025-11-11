@@ -14,7 +14,6 @@ include './includes/header.php';
         <div id="responseMessage" class="mt-3 text-center"></div>
 
         <?php 
-        // Validate the 'id' parameter
         $paramResult = checkParamId('id');
         $item = null;
 
@@ -27,7 +26,7 @@ include './includes/header.php';
             $itemResult = getById('items', $paramResult);
 
             if ($itemResult['status'] == 200) {
-                $item = $itemResult['data']; // Simplify access
+                $item = $itemResult['data']; 
             } else {
                 echo '<h2 class="text-danger">' . htmlspecialchars($itemResult['message']) . '</h2>';
                 exit;

@@ -11,7 +11,6 @@ include 'includes/header.php';
             <div class="card-body">
                 <div id="responseMessage" class="mt-1 text-center"></div>
 
-                <!-- Note: form id is invoiceForm -->
                 <form id="invoiceForm" novalidate>
                     <div class="row">
                         <div class="col-md-8 mb-3">
@@ -114,7 +113,7 @@ include 'includes/header.php';
         const unitPrice = document.getElementById('unit_price');
         const totalPrice = document.getElementById('total_price');
 
-        // Category -> subcategories map
+        // Category  subcategories map
         const categorySelect = document.getElementById('item_category');
         const subCategorySelect = document.getElementById('item_sub_category');
         const subCategories = {
@@ -123,7 +122,6 @@ include 'includes/header.php';
             "Furniture": ["Sofas", "Tables", "Chairs", "Beds"]
         };
 
-        // Populate subcategories when category changes
         categorySelect.addEventListener('change', () => {
             const selectedCategory = categorySelect.value;
             subCategorySelect.innerHTML = '<option value="">Select Sub Category</option>';
@@ -147,7 +145,6 @@ include 'includes/header.php';
         if (quantity) quantity.addEventListener('input', calculateTotal);
         if (unitPrice) unitPrice.addEventListener('input', calculateTotal);
 
-        // Helpers for showing/clearing validation UI
         function clearErrors() {
             responseMessage.innerHTML = '';
             invoiceForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
@@ -170,34 +167,34 @@ include 'includes/header.php';
     </div>`;
         }
 
-      function clientValidate() {
-    const errors = {};
-    const itemCode = (invoiceForm.item_code?.value || '').trim();
-    const itemName = (invoiceForm.item_name?.value || '').trim();
-    const qtyVal = invoiceForm.quantity?.value;
-    const unitVal = invoiceForm.unit_price?.value;
+        function clientValidate() {
+            const errors = {};
+            const itemCode = (invoiceForm.item_code?.value || '').trim();
+            const itemName = (invoiceForm.item_name?.value || '').trim();
+            const qtyVal = invoiceForm.quantity?.value;
+            const unitVal = invoiceForm.unit_price?.value;
 
-    if (!itemCode) errors.item_code = 'Item code is required';
-    if (!itemName) errors.item_name = 'Item name is required';
-    if (unitVal === '' || unitVal === null || isNaN(unitVal) || Number(unitVal) < 0)
-        errors.unit_price = 'Unit price is required and must be 0 or greater';
-    if (qtyVal === '' || qtyVal === null || isNaN(qtyVal) || Number(qtyVal) < 0)
-        errors.quantity = 'Quantity must be 0 or greater';
+            if (!itemCode) errors.item_code = 'Item code is required';
+            if (!itemName) errors.item_name = 'Item name is required';
+            if (unitVal === '' || unitVal === null || isNaN(unitVal) || Number(unitVal) < 0)
+                errors.unit_price = 'Unit price is required and must be 0 or greater';
+            if (qtyVal === '' || qtyVal === null || isNaN(qtyVal) || Number(qtyVal) < 0)
+                errors.quantity = 'Quantity must be 0 or greater';
 
-    return errors;
-}
+            return errors;
+        }
 
 
         // date show
 
         const invoiceDateInput = document.getElementById('invoice_date');
-if (invoiceDateInput) {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  invoiceDateInput.value = `${year}-${month}-${day}`; // format: YYYY-MM-DD
-}
+        if (invoiceDateInput) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            invoiceDateInput.value = `${year}-${month}-${day}`; 
+        }
         invoiceForm.addEventListener('input', function(e) {
             const name = e.target.name;
             if (!name) return;
@@ -208,25 +205,50 @@ if (invoiceDateInput) {
             }
         });
 
-        let invoiceCounter = 1; // start from 1
+        let invoiceCounter = 1;
 
-        function generateInvoiceNo() {
+        //this is for genrate invoice no and get last invoice no +1
+        const invoiceNumberInput = document.getElementById('invoice_number');
+
+        async function fetchLastInvoiceNo() {
+            try {
+                const resp = await fetch('invoiceNofetch.php');
+                const data = await resp.json();
+
+                if (data.status === 'success' && data.last_invoice) {
+                    const nextInvoice = generateNextInvoice(data.last_invoice);
+                    invoiceNumberInput.value = nextInvoice;
+                } else {
+                    invoiceNumberInput.value = generateInvoiceNo(1);
+                }
+            } catch (err) {
+                console.error('Error fetching last invoice:', err);
+                invoiceNumberInput.value = generateInvoiceNo(1);
+            }
+        }
+
+        // function to generate invoice based on current date & number
+        function generateInvoiceNo(counter) {
             const today = new Date();
             const y = today.getFullYear();
             const m = String(today.getMonth() + 1).padStart(2, '0');
             const d = String(today.getDate()).padStart(2, '0');
-
-            const invoiceNo = `INV-${y}${m}${d}-${String(invoiceCounter).padStart(4, '0')}`;
-            return invoiceNo;
+            return `INV-${y}${m}${d}-${String(counter).padStart(4, '0')}`;
         }
 
-        // Set initial invoice number on load
-        const invoiceNumberInput = document.getElementById('invoice_number');
-        if (invoiceNumberInput) {
-            invoiceNumberInput.value = generateInvoiceNo();
+        function generateNextInvoice(lastInvoice) {
+            const match = lastInvoice.match(/INV-(\d{8})-(\d+)/);
+            if (!match) return generateInvoiceNo(1);
+            const lastNum = parseInt(match[2]) + 1;
+            return `INV-${match[1]}-${String(lastNum).padStart(4, '0')}`;
         }
 
-        // Submit handler
+        fetchLastInvoiceNo();
+
+
+
+
+        // Submit 
         invoiceForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearErrors();
@@ -238,21 +260,18 @@ if (invoiceDateInput) {
                 return;
             }
 
-            // disable submit while saving
             submitBtn.disabled = true;
             const originalBtnText = submitBtn.textContent;
             submitBtn.textContent = 'Saving...';
 
             try {
                 const formData = new FormData(invoiceForm);
-                // Replace 'itemInsert.php' with the correct endpoint if different
                 const resp = await fetch('ivoiceCode.php', {
                     method: 'POST',
                     body: formData,
                     credentials: 'same-origin'
                 });
 
-                // read response as text then try to parse JSON (robust parsing)
                 const text = await resp.text();
                 let data = null;
                 try {
@@ -266,9 +285,13 @@ if (invoiceDateInput) {
                 if (data.status === 'success') {
                     showAlert('success', data.message || 'Saved successfully.');
                     invoiceForm.reset();
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+
                     if (totalPrice) totalPrice.value = '0.00';
                 } else {
-                    // server-side validation errors expected in data.errors
+                    // server-side validation 
                     if (data.errors) {
                         showFieldErrors(data.errors);
                         showAlert('danger', data.message || 'Please correct the errors and try again.');
@@ -276,6 +299,7 @@ if (invoiceDateInput) {
                         showAlert('danger', data.message || 'An error occurred while saving.');
                     }
                 }
+
 
             } catch (err) {
                 console.error('Fetch error:', err);
@@ -286,14 +310,14 @@ if (invoiceDateInput) {
             }
 
             if (data.status === 'success') {
-    showAlert('success', data.message || 'Saved successfully.');
-    invoiceForm.reset();
-    if (totalPrice) totalPrice.value = '0.00';
-    
-    // Generate next invoice number
-    invoiceCounter++;
-    invoiceNumberInput.value = generateInvoiceNo();
-}
+                showAlert('success', data.message || 'Saved successfully.');
+                invoiceForm.reset();
+                if (totalPrice) totalPrice.value = '0.00';
+
+                // Generate next invoice no
+                invoiceCounter++;
+                invoiceNumberInput.value = generateInvoiceNo();
+            }
 
         });
     });

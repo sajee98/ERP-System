@@ -3,14 +3,12 @@ require_once __DIR__ . '/../config/function.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Only accept POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['status'=>'error','message'=>'Invalid request method. Use POST.']);
     exit;
 }
 
-// fallback sanitize if validate() missing
 if (!function_exists('validate')) {
     function validate($v) {
         return trim(htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'));
@@ -31,7 +29,6 @@ if (!empty($errors)) {
     exit;
 }
 
-// sanitize
 $itemCode   = validate($_POST['item_code']);
 $itemName   = validate($_POST['item_name']);
 $itemCat    = validate($_POST['item_category']);
@@ -40,12 +37,10 @@ $quantity   = validate($_POST['quantity']);
 $Uprice     = validate($_POST['unit_price']);
 $Tprice     = validate($_POST['total_price']);
 
-// cast numeric types
 $quantityInt  = (int)$quantity;
 $UpriceFloat  = (float)$Uprice;
 $TpriceFloat  = (float)$Tprice;
 
-// further validation
 if (!is_numeric($quantity) || $quantityInt < 0) $errors['quantity'] = 'Quantity must be 0 or greater';
 if (!is_numeric($Uprice) || $UpriceFloat < 0) $errors['unit_price'] = 'Unit price must be 0 or greater';
 if (!is_numeric($Tprice) || $TpriceFloat < 0) $errors['total_price'] = 'Total price must be 0 or greater';
